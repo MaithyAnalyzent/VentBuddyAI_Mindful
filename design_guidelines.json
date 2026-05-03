@@ -1,0 +1,100 @@
+{
+  "theme": "Light Mode (with specific Sleep Companion Dark Mode)",
+  "archetype": "1 (Organic & Earthy)",
+  "emotional_tone": "Safe, human-centered, grounded, emotionally intelligent, steady.",
+  "colors": {
+    "background": {
+      "app": "#F9F6F0",
+      "card": "#FDFBF7",
+      "sleep_mode": "#0B131E"
+    },
+    "primary": {
+      "default": "#8A9A86",
+      "hover": "#748370",
+      "light": "#D8E2D5"
+    },
+    "accent": {
+      "terracotta": "#E27D60",
+      "terracotta_hover": "#CB674B",
+      "sand": "#E8A87C"
+    },
+    "text": {
+      "primary": "#2D3A3A",
+      "secondary": "#6B7B7B",
+      "inverse": "#FDFBF7",
+      "sleep_mode": "#E1E7EE"
+    },
+    "border": "#E5E0D8",
+    "crisis": "#D9534F"
+  },
+  "typography": {
+    "fonts": {
+      "heading": "Outfit, sans-serif",
+      "body": "DM Sans, sans-serif"
+    },
+    "rules": {
+      "h1": "text-4xl sm:text-5xl lg:text-5xl font-medium tracking-tight text-[#2D3A3A]",
+      "h2": "text-2xl sm:text-3xl font-medium tracking-tight text-[#2D3A3A]",
+      "h3": "text-xl sm:text-2xl font-medium text-[#2D3A3A]",
+      "body": "text-base leading-relaxed text-[#6B7B7B]",
+      "labels": "text-xs font-semibold uppercase tracking-[0.2em] text-[#6B7B7B]"
+    }
+  },
+  "layout_and_spacing": {
+    "spacing_scale": "Generous spacing. Use p-6, p-8, p-12 inside cards and sections.",
+    "border_radius": "rounded-2xl or rounded-3xl for soft, approachable shapes.",
+    "dashboard_grid": "Bento-style Control Room grid (grid-cols-1 md:grid-cols-3 lg:grid-cols-4). Tightly packed with gap-6, but generous internal padding (p-6) in each cell.",
+    "alignment": "Left-align paragraphs, inputs, dense content. Center-align only major welcome titles or breathing exercise states."
+  },
+  "components_and_surfaces": {
+    "surface_strategy": "Neumorphism / Clay & Crisp. Avoid glassmorphism to prevent visual refraction of health data.",
+    "cards": "Flat background (#FDFBF7), 1px subtle inner border (border-[#E5E0D8]), no heavy shadows. Add shadow-sm on hover.",
+    "buttons": "Soft but distinct. Primary uses #8A9A86 with #FDFBF7 text. Avoid pure black/white.",
+    "navigation": "Sticky top or solid side navigation. Solid background (bg-[#F9F6F0]) with a delicate bottom border.",
+    "forms": "Shadcn components heavily customized with rounded-xl, soft borders, and earthy focus rings (focus:ring-[#8A9A86]).",
+    "charts": "Use Recharts. Style lines with soft curves (type='monotone'). Use palette colors (#8A9A86, #E8A87C).",
+    "data_testids": "MANDATORY on all interactive elements (e.g., data-testid='push-to-talk-button', data-testid='mood-tracker-card')."
+  },
+  "motion_and_interactions": {
+    "general": "Smooth, breathing-paced transitions. No sudden snaps.",
+    "breathing_timer": "Framer Motion. Use a pulsing, scale-changing organic shape (scale: [1, 1.2, 1], transition: { duration: 8, repeat: Infinity, ease: 'easeInOut' }).",
+    "voice_interaction": "Subtle mic pulsing effect when listening, using scale and opacity ripples in #8A9A86.",
+    "hover_states": "-translate-y-1 with subtle shadow-md for cards. Hover color explicitly defined."
+  },
+  "media": {
+    "image_urls": {
+      "calm_nature_background": {
+        "url": "https://images.pexels.com/photos/33050677/pexels-photo-33050677.jpeg",
+        "description": "Black and white close-up of textured foliage creating a calming, natural abstract artwork.",
+        "category": "background",
+        "usage": "Use as a subtle hero background image or section divider. Max opacity 10% (bg-white/90 over it)."
+      },
+      "abstract_ai_shape": {
+        "url": "https://images.unsplash.com/photo-1679931974847-bbb01236fe88",
+        "description": "Abstract soft green object",
+        "category": "illustration",
+        "usage": "Use as a visual placeholder or abstract representation of the AI companion in greeting cards. Clip to rounded shapes."
+      },
+      "sleep_companion_bg": {
+        "url": "https://images.pexels.com/photos/20763740/pexels-photo-20763740.jpeg",
+        "description": "Star-filled night sky above a serene horizon with subtle light glow.",
+        "category": "background",
+        "usage": "Background for 'Sleep Companion Mode'. Overlay with heavy #0B131E/80 gradient for text legibility."
+      }
+    }
+  },
+  "iconography": {
+    "library": "@phosphor-icons/react",
+    "style": "Duotone, size 24 for main actions, size 20 for list items. Match to text color."
+  },
+  "instructions_to_main_agent": [
+    "Use Tailwind exclusively for structural layouts. Do NOT use Shadcn Card for complex bento grids; use pure div elements to maintain complete spacing control.",
+    "Implement the 'Voice-based AI emotional support chat' with a clear, floating 'Push-to-Talk' mic button that has a pulsing ring animation when active.",
+    "For the Mood tracking dashboard, utilize Recharts with soft, rounded bar charts and curved lines. Use the defined #8A9A86 and #E8A87C colors.",
+    "For the guided breathing module, implement a minimalist Framer Motion animated circle that expands on inhale (4s) and shrinks on exhale (4s).",
+    "Do NOT use pure #000000 or pure #FFFFFF. Rely on the provided earthy palette.",
+    "For the 'Crisis detection', strictly use the 'crisis' color (#D9534F) for the CTA, ensuring a minimum 4.5:1 contrast ratio against its background.",
+    "Include data-testid on every clickable element and form input for testability.",
+    "Ensure 'Sleep Companion Mode' reverses the UI to the dark palette: bg-[#0B131E] and text-[#E1E7EE]."
+  ]
+}

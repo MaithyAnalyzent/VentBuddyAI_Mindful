@@ -1,0 +1,283 @@
+:root {
+  color: #21302a;
+  background: #f6f3ec;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+.auth-shell {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.auth-panel {
+  width: min(980px, 100%);
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 40px;
+  align-items: center;
+}
+
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 12px;
+  font-weight: 800;
+  color: #6f7f4f;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin-top: 0;
+}
+
+h1 {
+  font-size: clamp(38px, 6vw, 72px);
+  line-height: 0.95;
+  margin-bottom: 20px;
+}
+
+.lead {
+  font-size: 19px;
+  line-height: 1.7;
+  color: #51635b;
+}
+
+.auth-form,
+.wellness-panel section {
+  background: #fffaf1;
+  border: 1px solid #e4dbc8;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.tabs button,
+.ghost {
+  border: 1px solid #cfc5b2;
+  background: #fffaf1;
+  color: #21302a;
+  border-radius: 6px;
+  padding: 10px 12px;
+}
+
+.tabs .active,
+.primary {
+  border: 0;
+  background: #2f5d50;
+  color: white;
+  border-radius: 6px;
+  padding: 11px 14px;
+  font-weight: 700;
+}
+
+.auth-form,
+.stack {
+  display: grid;
+  gap: 12px;
+}
+
+input,
+textarea,
+select {
+  width: 100%;
+  border: 1px solid #cfc5b2;
+  background: white;
+  color: #21302a;
+  border-radius: 6px;
+  padding: 11px 12px;
+}
+
+textarea {
+  min-height: 92px;
+  resize: vertical;
+}
+
+.error {
+  color: #9b2f2f;
+  font-weight: 700;
+}
+
+.app-shell {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr) 320px;
+}
+
+.sidebar,
+.wellness-panel {
+  padding: 20px;
+  border-right: 1px solid #e4dbc8;
+  display: grid;
+  align-content: start;
+  gap: 16px;
+}
+
+.wellness-panel {
+  border-right: 0;
+  border-left: 1px solid #e4dbc8;
+  overflow-y: auto;
+}
+
+.telegram-link {
+  display: block;
+  text-align: center;
+  text-decoration: none;
+  background: #1f7a8c;
+  color: white;
+  border-radius: 6px;
+  padding: 11px 14px;
+  font-weight: 700;
+}
+
+.chat-panel {
+  min-height: 100vh;
+  display: grid;
+  grid-template-rows: 1fr auto auto auto;
+  background: #fbf8f1;
+}
+
+.messages {
+  padding: 28px;
+  overflow-y: auto;
+}
+
+.empty-state {
+  max-width: 680px;
+  margin: 10vh auto;
+  text-align: center;
+}
+
+.empty-state h1 {
+  font-size: clamp(34px, 5vw, 58px);
+}
+
+.message {
+  max-width: 740px;
+  margin: 0 0 14px;
+  padding: 14px 16px;
+  border-radius: 8px;
+  line-height: 1.65;
+}
+
+.message.user {
+  margin-left: auto;
+  background: #2f5d50;
+  color: white;
+}
+
+.message.assistant {
+  background: white;
+  border: 1px solid #e4dbc8;
+}
+
+.crisis {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #eadfca;
+}
+
+.composer {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  padding: 18px;
+  border-top: 1px solid #e4dbc8;
+}
+
+.composer textarea {
+  min-height: 58px;
+}
+
+.voice-row,
+.inline {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.prompt {
+  color: #51635b;
+  line-height: 1.5;
+}
+
+.habit-list {
+  list-style: none;
+  padding: 0;
+  margin: 14px 0 0;
+  display: grid;
+  gap: 8px;
+}
+
+.habit-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid #eadfca;
+  padding-bottom: 8px;
+}
+
+.habit-list span {
+  color: #6f7f4f;
+  white-space: nowrap;
+}
+
+@media (max-width: 1100px) {
+  .app-shell {
+    grid-template-columns: 220px minmax(0, 1fr);
+  }
+
+  .wellness-panel {
+    grid-column: 1 / -1;
+    border-left: 0;
+    border-top: 1px solid #e4dbc8;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .auth-panel,
+  .app-shell,
+  .wellness-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    border-right: 0;
+    border-bottom: 1px solid #e4dbc8;
+  }
+
+  .composer,
+  .voice-row,
+  .inline {
+    grid-template-columns: 1fr;
+    display: grid;
+  }
+}

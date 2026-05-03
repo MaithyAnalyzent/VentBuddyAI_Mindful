@@ -1,0 +1,44 @@
+services:
+  - type: web
+    name: ventbuddy-ai-api
+    env: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_CHAT_MODEL
+        value: gpt-4o-mini
+      - key: OPENAI_STT_MODEL
+        value: whisper-1
+      - key: OPENAI_TTS_MODEL
+        value: tts-1
+      - key: MONGODB_URI
+        sync: false
+      - key: DB_NAME
+        value: ventbuddy_ai
+      - key: JWT_SECRET
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_BOT_NAME
+        value: VentBuddy AI
+
+  - type: web
+    name: ventbuddy-ai-web
+    env: static
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_API_BASE_URL
+        sync: false
