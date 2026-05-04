@@ -49,6 +49,8 @@ function App() {
   const [voiceReplies, setVoiceReplies] = useState(true);
   const [sessions, setSessions] = useState([]);
   const [sessionQuery, setSessionQuery] = useState("");
+  const [renamingId, setRenamingId] = useState(null);
+  const [renameText, setRenameText] = useState("");
   const [sessionId, setSessionId] = useState(null);
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState("");
@@ -65,6 +67,8 @@ function App() {
   const [breathing, setBreathing] = useState({ active: false, seconds: 60, phase: "inhale" });
   const [therapist, setTherapist] = useState(null);
   const [telegram, setTelegram] = useState(null);
+  const [checkin, setCheckin] = useState(null);
+  const [feeling, setFeeling] = useState("");
   const recorderRef = useRef(null);
   const chunksRef = useRef([]);
   const scrollRef = useRef(null);
@@ -124,16 +128,18 @@ function App() {
   }
 
   async function loadWellness() {
-    const [trend, prompts, journals, habitList] = await Promise.all([
+    const [trend, prompts, journals, habitList, todayCheckin] = await Promise.all([
       api("/mood/trends").catch(() => ({ items: [] })),
       api("/journal/prompts").catch(() => ({ prompts: [] })),
       api("/journal").catch(() => []),
       api("/habits").catch(() => []),
+      api("/checkin/today").catch(() => null),
     ]);
     setMoods(trend.items || []);
     setJournalPrompts(prompts.prompts || []);
     setJournalEntries(journals || []);
     setHabits(habitList || []);
+    setCheckin(todayCheckin);
   }
 
   async function submitAuth(event) {
@@ -171,6 +177,36 @@ function App() {
     await api(`/chat/sessions/${id}`, { method: "DELETE" }).catch(() => null);
     if (sessionId === id) newChat();
     loadSessions();
+  }
+
+  function startRename(session) {
+    setRenamingId(session.id);
+    setRenameText(session.title || "Untitled");
+  }
+
+  async function submitRename(id) {
+    const title = renameText.trim();
+    if (!title) {
+      setRenamingId(null);
+      return;
+    }
+    await api(`/chat/sessions/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ title }),
+    }).catch(() => null);
+    setRenamingId(null);
+    setRenameText("");
+    loadSessions();
+  }
+
+  async function submitCheckin(value) {
+    setFeeling(value);
+    await api("/checkin/respond", {
+      method: "POST",
+      body: JSON.stringify({ feeling: value, note: "" }),
+    }).catch(() => null);
+    const today = await api("/checkin/today").catch(() => null);
+    setCheckin(today);
   }
 
   async function sendMessage(event) {
@@ -211,7 +247,8 @@ function App() {
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const recorder = new MediaRecorder(stream);
+      const mimeType = MediaRecorder.isTypeSupported?.("audio/webm") ? "audio/webm" : "";
+      const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
       chunksRef.current = [];
       recorderRef.current = recorder;
 
@@ -363,6 +400,9 @@ function App() {
           logs={moods.length}
           setActiveTab={setActiveTab}
           newChat={newChat}
+          checkin={checkin}
+          feeling={feeling}
+          submitCheckin={submitCheckin}
         />
       )}
       {activeTab === "talk" && (
@@ -373,6 +413,12 @@ function App() {
           loadSessions={loadSessions}
           openSession={openSession}
           deleteSession={deleteSession}
+          renamingId={renamingId}
+          renameText={renameText}
+          setRenameText={setRenameText}
+          startRename={startRename}
+          submitRename={submitRename}
+          setRenamingId={setRenamingId}
           newChat={newChat}
           messages={messages}
           scrollRef={scrollRef}
@@ -450,7 +496,8 @@ function Landing({ onBegin, onSignin }) {
   );
 }
 
-function Home({ firstName, moodAvg, energyAvg, sleepAvg, logs, setActiveTab, newChat }) {
+function Home({ firstName, moodAvg, energyAvg, sleepAvg, logs, setActiveTab, newChat, checkin, feeling, submitCheckin }) {
+  const prompt = checkin?.completed ? "You checked in today ✓" : checkin?.prompts?.[0] || "How are you feeling today?";
   return (
     <section className="page home-page">
       <div className="page-head split">
@@ -462,11 +509,20 @@ function Home({ firstName, moodAvg, energyAvg, sleepAvg, logs, setActiveTab, new
         <button className="dark-pill" onClick={newChat}>◌ Talk to Mindful</button>
       </div>
       <article className="wide-card checkin-card">
-        <p className="eyebrow">Daily check-in</p>
-        <h2>How are you feeling today?</h2>
-        <div className="chips">
-          {["Heavy", "Anxious", "Numb", "Okay", "Hopeful", "Lighter"].map((label) => <button key={label}>{label}</button>)}
+        <div className="checkin-head">
+          <div>
+            <p className="eyebrow">Daily check-in</p>
+            <h2>{prompt}</h2>
+          </div>
+          {checkin?.completed && <span className="logged-chip">Logged: {checkin.checkin?.feeling}</span>}
         </div>
+        {!checkin?.completed && (
+          <div className="chips">
+            {["Heavy", "Anxious", "Numb", "Okay", "Hopeful", "Lighter"].map((label) => (
+              <button className={feeling === label ? "selected" : ""} key={label} onClick={() => submitCheckin(label)}>{label}</button>
+            ))}
+          </div>
+        )}
       </article>
       <div className="stats-grid">
         <Stat title="7-day mood" value={moodAvg} icon="♡" />
@@ -501,11 +557,30 @@ function Talk(props) {
         <div className="session-list">
           {props.sessions.map((session) => (
             <article key={session.id} className="session-item">
-              <button onClick={() => props.openSession(session.id)}>
-                <strong>{session.channel === "telegram" ? "Telegram · " : ""}{session.title || "New conversation"}</strong>
-                <span>{session.last_emotion || "neutral"}</span>
-              </button>
-              <button className="delete" onClick={() => props.deleteSession(session.id)}>×</button>
+              {props.renamingId === session.id ? (
+                <div className="rename-row">
+                  <input
+                    autoFocus
+                    value={props.renameText}
+                    onChange={(e) => props.setRenameText(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") props.submitRename(session.id);
+                      if (e.key === "Escape") props.setRenamingId(null);
+                    }}
+                  />
+                  <button onClick={() => props.submitRename(session.id)}>✓</button>
+                  <button onClick={() => props.setRenamingId(null)}>×</button>
+                </div>
+              ) : (
+                <>
+                  <button onClick={() => props.openSession(session.id)}>
+                    <strong>{session.channel === "telegram" ? "Telegram · " : ""}{session.title || "New conversation"}</strong>
+                    <span>{session.last_message || session.last_emotion || "No messages yet"}</span>
+                  </button>
+                  <button className="rename" onClick={() => props.startRename(session)}>✎</button>
+                  <button className="delete" onClick={() => props.deleteSession(session.id)}>×</button>
+                </>
+              )}
             </article>
           ))}
         </div>

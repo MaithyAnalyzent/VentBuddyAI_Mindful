@@ -118,10 +118,16 @@ input:focus, textarea:focus, select:focus { border-color: var(--sage); box-shado
 }
 .checkin-card { padding: 34px; margin-bottom: 30px; }
 .checkin-card h2 { font-size: 28px; }
+.checkin-head { display: flex; align-items: start; justify-content: space-between; gap: 18px; flex-wrap: wrap; }
+.logged-chip {
+  font-size: 12px; text-transform: uppercase; letter-spacing: .12em; color: #6f7f4f;
+  background: var(--sage-soft); border-radius: 999px; padding: 7px 12px; font-weight: 800;
+}
 .chips { display: flex; gap: 10px; flex-wrap: wrap; }
 .chips button {
   border: 1px solid var(--line); background: var(--panel); border-radius: 28px; padding: 11px 20px; color: var(--ink);
 }
+.chips button.selected { background: var(--sage); border-color: var(--sage); color: white; }
 .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 30px; }
 .stat-card { padding: 24px; min-height: 118px; display: flex; justify-content: space-between; align-items: start; }
 .stat-card strong { font-size: 36px; }
@@ -147,14 +153,19 @@ button.action-card { border: 1px solid var(--line); }
 }
 .chat-history { padding: 16px; display: grid; grid-template-rows: auto auto 1fr auto; gap: 12px; }
 .session-list { overflow: auto; display: grid; gap: 8px; align-content: start; }
-.session-item { display: grid; grid-template-columns: 1fr auto; gap: 4px; align-items: center; }
+.session-item { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 4px; align-items: center; }
 .session-item button:first-child {
   border: 0; background: transparent; text-align: left; border-radius: 14px; padding: 12px;
 }
 .session-item button:first-child:hover { background: var(--soft); }
 .session-item strong { display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .session-item span { color: var(--muted); font-size: 12px; text-transform: capitalize; }
-.delete { border: 0; background: transparent; color: var(--muted); font-size: 20px; }
+.rename, .delete { border: 0; background: transparent; color: var(--muted); font-size: 18px; padding: 8px; }
+.rename:hover { color: var(--sage); }
+.delete:hover { color: var(--danger); }
+.rename-row { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr auto auto; gap: 6px; }
+.rename-row input { height: 38px; border-radius: 12px; padding: 8px 10px; }
+.rename-row button { border: 0; background: var(--panel); color: var(--ink); border-radius: 10px; padding: 0 10px; }
 .telegram-link {
   text-align: center; text-decoration: none; background: #2f6f82; color: white; border-radius: 18px; padding: 12px; font-weight: 800;
 }
