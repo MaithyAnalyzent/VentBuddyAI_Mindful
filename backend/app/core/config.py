@@ -30,10 +30,15 @@ class Settings:
     admin_password: str = _get("ADMIN_PASSWORD", "ChangeMeBeforeProduction")
     telegram_bot_token: str = _get("TELEGRAM_BOT_TOKEN", "")
     telegram_bot_name: str = _get("TELEGRAM_BOT_NAME", "VentBuddy AI")
+    telegram_polling_enabled: str = _get("TELEGRAM_POLLING_ENABLED", "true")
 
     @property
     def allowed_origins(self) -> list[str]:
         return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
+
+    @property
+    def should_start_telegram_polling(self) -> bool:
+        return self.telegram_polling_enabled.lower().strip() in {"1", "true", "yes", "on"}
 
 
 settings = Settings()

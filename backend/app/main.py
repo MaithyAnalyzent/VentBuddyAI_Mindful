@@ -310,13 +310,17 @@ async def chat_voice(
         "mode": mode, "created_at": now_iso(),
     })
 
-    scoped_id = f"{user['id']}_{sid}_{mode}"
-    history = await db.messages.find(
-        {"user_id": user["id"], "session_id": sid, "id": {"$ne": user_msg_id}, "role": {"$in": ["user", "assistant"]}},
-        {"_id": 0, "role": 1, "content": 1},
-    ).sort("created_at", -1).to_list(12)
-    history.reverse()
-    reply = await generate_chat_response(OPENAI_KEY, scoped_id, system_msg, text, history=history)
+    try:
+        scoped_id = f"{user['id']}_{sid}_{mode}"
+        history = await db.messages.find(
+            {"user_id": user["id"], "session_id": sid, "id": {"$ne": user_msg_id}, "role": {"$in": ["user", "assistant"]}},
+            {"_id": 0, "role": 1, "content": 1},
+        ).sort("created_at", -1).to_list(12)
+        history.reverse()
+        reply = await generate_chat_response(OPENAI_KEY, scoped_id, system_msg, text, history=history)
+    except Exception as e:
+        logging.exception("Voice LLM error")
+        raise HTTPException(status_code=500, detail=f"AI service error after transcription: {str(e)}")
 
     await db.messages.insert_one({
         "id": str(uuid.uuid4()), "user_id": user["id"], "session_id": sid,
@@ -724,13 +728,26 @@ async def on_startup():
     await seed_admin(db)
     logger.info("VentBuddy AI ready")
 
-    # Launch Telegram bot (long polling) in the background
-    if settings.telegram_bot_token:
+    # Launch Telegram bot (long polling) in the background.
+    # Telegram allows only one getUpdates poller per bot token.
+    if settings.telegram_bot_token and settings.should_start_telegram_polling:
         try:
+            from telegram.error import Conflict
+
             tg_app = build_tg_app(db, OPENAI_KEY)
             await tg_app.initialize()
             await tg_app.start()
-            await tg_app.updater.start_polling(drop_pending_updates=True)
+            try:
+                await tg_app.bot.delete_webhook(drop_pending_updates=True)
+                await tg_app.updater.start_polling(drop_pending_updates=True)
+            except Conflict:
+                logger.warning(
+                    "Telegram polling skipped: another bot instance is already polling this token. "
+                    "Keep TELEGRAM_BOT_TOKEN on only one running service, or set TELEGRAM_POLLING_ENABLED=false here."
+                )
+                await tg_app.stop()
+                await tg_app.shutdown()
+                return
             app.state.tg_app = tg_app
             try:
                 me = await tg_app.bot.get_me()
@@ -741,6 +758,8 @@ async def on_startup():
                 logger.info("VentBuddy AI Telegram bot polling")
         except Exception:
             logger.exception("Failed to start Telegram bot")
+    elif settings.telegram_bot_token:
+        logger.info("Telegram bot token configured, but polling is disabled by TELEGRAM_POLLING_ENABLED=false")
 
 
 @app.on_event("shutdown")
