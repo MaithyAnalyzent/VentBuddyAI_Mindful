@@ -1,4 +1,5 @@
 """VentBuddy AI - standalone mental wellness agent backend."""
+import asyncio
 import uuid
 import logging
 from datetime import datetime, timezone, date
@@ -8,6 +9,7 @@ from fastapi import FastAPI, APIRouter, HTTPException, Request, Response, Depend
 from fastapi.responses import JSONResponse
 from starlette.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, EmailStr, Field
+from openai import RateLimitError
 
 from app.core.config import settings
 from app.db.mongo import client, db, ensure_indexes
@@ -291,6 +293,17 @@ async def chat_voice(
         raise HTTPException(status_code=400, detail="Empty audio")
     try:
         text = await transcribe_audio(OPENAI_KEY, audio_bytes, audio.filename or "audio.webm")
+    except RateLimitError as e:
+        logging.exception("OpenAI transcription quota/rate limit")
+        detail = getattr(e, "body", None) or {}
+        error = detail.get("error", {}) if isinstance(detail, dict) else {}
+        code = error.get("code") or getattr(e, "code", None)
+        if code == "insufficient_quota":
+            raise HTTPException(
+                status_code=402,
+                detail="OpenAI quota exceeded. Add billing/credits to the OpenAI account used by OPENAI_API_KEY, or replace it with a funded key.",
+            )
+        raise HTTPException(status_code=429, detail="OpenAI transcription is rate limited. Please wait a moment and try again.")
     except Exception as e:
         logging.exception("STT failed")
         raise HTTPException(status_code=500, detail=f"Transcription failed: {str(e)}")
@@ -737,18 +750,44 @@ async def on_startup():
             tg_app = build_tg_app(db, OPENAI_KEY)
             await tg_app.initialize()
             await tg_app.start()
+            app.state.tg_app = tg_app
+
+            async def stop_conflicting_telegram_app():
+                try:
+                    await tg_app.updater.stop()
+                except Exception:
+                    pass
+                try:
+                    await tg_app.stop()
+                    await tg_app.shutdown()
+                except Exception:
+                    logger.exception("Error stopping conflicting Telegram bot")
+                if getattr(app.state, "tg_app", None) is tg_app:
+                    app.state.tg_app = None
+
+            def telegram_polling_error_callback(exc):
+                if isinstance(exc, Conflict):
+                    logger.warning(
+                        "Telegram polling stopped: another running service is already polling this bot token. "
+                        "Set TELEGRAM_POLLING_ENABLED=false on duplicate Render services, old deployments, workers, or local backends."
+                    )
+                    asyncio.get_running_loop().create_task(stop_conflicting_telegram_app())
+                    return
+                logger.exception("Telegram polling error", exc_info=exc)
+
             try:
                 await tg_app.bot.delete_webhook(drop_pending_updates=True)
-                await tg_app.updater.start_polling(drop_pending_updates=True)
+                await tg_app.updater.start_polling(
+                    drop_pending_updates=True,
+                    error_callback=telegram_polling_error_callback,
+                )
             except Conflict:
                 logger.warning(
                     "Telegram polling skipped: another bot instance is already polling this token. "
                     "Keep TELEGRAM_BOT_TOKEN on only one running service, or set TELEGRAM_POLLING_ENABLED=false here."
                 )
-                await tg_app.stop()
-                await tg_app.shutdown()
+                await stop_conflicting_telegram_app()
                 return
-            app.state.tg_app = tg_app
             try:
                 me = await tg_app.bot.get_me()
                 app.state.tg_bot_username = me.username
